@@ -22,7 +22,10 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.carsearch.app",
-      "versionCode": 1
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -39,11 +42,19 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "O CarSearch precisa acessar suas fotos para identificar o veículo."
+          "photosPermission": "O CarSearch precisa acessar suas fotos para identificar o veículo.",
+          "microphonePermission": false,
+          "cameraPermission": false
         }
       ],
       "expo-font"
     ],
-    "backgroundColor": "#0F172A"
+    "backgroundColor": "#0F172A",
+    "extra": {
+      "eas": {
+        "projectId": "107f47c6-08f6-477e-8d5a-e43659ab9d35"
+      }
+    },
+    "owner": "mikaeldv"
   }
 }
