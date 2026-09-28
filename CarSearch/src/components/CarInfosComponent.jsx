@@ -1,30 +1,34 @@
-import { TextInput, View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-export default function CarInfosComponent({ marca, modelo, versao, setMarca, setModelo, setVersao }) {
+import TextField from "./TextField";
+import { spacing, typography } from "../theme";
+
+export default function CarInfosComponent({
+  label,
+  marca,
+  modelo,
+  versao,
+  setMarca,
+  setModelo,
+  setVersao,
+}) {
   return (
     <View style={styles.form}>
-      <TextInput
+      {label && <Text style={styles.label}>{label}</Text>}
+      <TextField
         placeholder="Marca (ex: Ford)"
-        placeholderTextColor="#94A3B8"
-        style={styles.input}
         value={marca}
         onChangeText={setMarca}
         maxLength={25}
       />
-
-      <TextInput
+      <TextField
         placeholder="Modelo (ex: Ranger)"
-        placeholderTextColor="#94A3B8"
-        style={styles.input}
         value={modelo}
         onChangeText={setModelo}
         maxLength={35}
       />
-
-      <TextInput
+      <TextField
         placeholder="Versão (ex: Raptor)"
-        placeholderTextColor="#94A3B8"
-        style={styles.input}
         value={versao}
         onChangeText={setVersao}
         maxLength={50}
@@ -35,13 +39,10 @@ export default function CarInfosComponent({ marca, modelo, versao, setMarca, set
 
 const styles = StyleSheet.create({
   form: {
-    gap: 12,
-    marginTop: 20,
+    gap: spacing.md,
   },
-  input: {
-    backgroundColor: "#1E293B",
-    color: "#FFF",
-    padding: 10,
-    borderRadius: 10,
-  }
+  label: {
+    ...typography.overline,
+    fontSize: 13,
+  },
 });

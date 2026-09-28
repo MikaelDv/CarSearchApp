@@ -1,190 +1,122 @@
-import React, { useState } from 'react'
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-  ActivityIndicator,
-  ScrollView
-} from 'react-native'
+import React, { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
-import { compararVeiculos } from '../service/CarService';
-import CarInfosComponent from '../components/CarInfosComponent';
+import Screen from "../components/Screen";
+import BrandHeader from "../components/BrandHeader";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import CarInfosComponent from "../components/CarInfosComponent";
+import { compararVeiculos } from "../service/CarService";
+import { notify } from "../utils/notify";
+import { colors, spacing, typography } from "../theme";
 
 export default function CarComparatorScreen({ navigation }) {
-  const [marca, setMarca] = useState('')
-  const [modelo, setModelo] = useState('')
-  const [versao, setVersao] = useState('')
-  const [marca2, setMarca2] = useState('')
-  const [modelo2, setModelo2] = useState('')
-  const [versao2, setVersao2] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [marca, setMarca] = useState("");
+  const [modelo, setModelo] = useState("");
+  const [versao, setVersao] = useState("");
+  const [marca2, setMarca2] = useState("");
+  const [modelo2, setModelo2] = useState("");
+  const [versao2, setVersao2] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleComparar() {
-    if (!marca || !modelo || !versao || !marca2 || !modelo2 || !versao2) {
-      alert("Preencha todos os campos")
-      return
+    const campos = [marca, modelo, versao, marca2, modelo2, versao2];
+    if (campos.some((campo) => !campo.trim())) {
+      notify("Campos obrigatórios", "Preencha os dados dos dois veículos.");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const carros = {
-        marca,
-        modelo,
-        versao,
-        marca2,
-        modelo2,
-        versao2
-      }
+        marca: marca.trim(),
+        modelo: modelo.trim(),
+        versao: versao.trim(),
+        marca2: marca2.trim(),
+        modelo2: modelo2.trim(),
+        versao2: versao2.trim(),
+      };
 
-      const resultado = await compararVeiculos(carros)
+      const resultado = await compararVeiculos(carros);
 
-      navigation.navigate('ComparatorResult', {
-        carros,
-        resultado
-      })
+      navigation.navigate("ComparatorResult", { carros, resultado });
 
-      setMarca('')
-      setModelo('')
-      setVersao('')
-      setMarca2('')
-      setModelo2('')
-      setVersao2('')
-
+      setMarca("");
+      setModelo("");
+      setVersao("");
+      setMarca2("");
+      setModelo2("");
+      setVersao2("");
     } catch (error) {
-      console.log(error)
-      alert("Erro ao comparar veículos")
+      console.log(error);
+      notify("Erro ao comparar veículos", error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView>
-        <Image
-          source={require("../../assets/fordLogo.png")}
-          style={styles.logo}
+    <Screen>
+      <BrandHeader title="CarSearch" subtitle="Compare dois veículos lado a lado" />
+
+      <Card>
+        <CarInfosComponent
+          label="Veículo 1"
+          marca={marca}
+          modelo={modelo}
+          versao={versao}
+          setMarca={setMarca}
+          setModelo={setModelo}
+          setVersao={setVersao}
         />
+      </Card>
 
-        <Text style={styles.title}>CarSearch</Text>
-        <Text style={styles.subtitle}>
-          Compare veículos
-        </Text>
+      <View style={styles.vsRow}>
+        <View style={styles.line} />
+        <Text style={styles.vs}>VS</Text>
+        <View style={styles.line} />
+      </View>
 
-        <View style={styles.form}>
-          <CarInfosComponent
-            marca={marca}
-            modelo={modelo}
-            versao={versao}
-            setMarca={setMarca}
-            setModelo={setModelo}
-            setVersao={setVersao}
-          />
+      <Card>
+        <CarInfosComponent
+          label="Veículo 2"
+          marca={marca2}
+          modelo={modelo2}
+          versao={versao2}
+          setMarca={setMarca2}
+          setModelo={setModelo2}
+          setVersao={setVersao2}
+        />
+      </Card>
 
-          <Text style={styles.formXtext}>X</Text>
-
-          <CarInfosComponent
-            marca={marca2}
-            modelo={modelo2}
-            versao={versao2}
-            setMarca={setMarca2}
-            setModelo={setModelo2}
-            setVersao={setVersao2}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleComparar}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.buttonText}>Comparar</Text>
-          )}
-        </TouchableOpacity>
-
-      </ScrollView>
-    </KeyboardAvoidingView>
-  )
+      <Button
+        title="Comparar"
+        icon="git-compare-outline"
+        onPress={handleComparar}
+        loading={loading}
+        style={styles.button}
+      />
+    </Screen>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  vsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginVertical: spacing.md,
+  },
+  line: {
     flex: 1,
-    backgroundColor: '#0F172A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24
+    height: 1,
+    backgroundColor: colors.border,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center'
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginBottom: 20
-  },
-  form: {
-    gap: 8,
-    marginTop: 20,
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  formXtext:{
-      color: '#FFFFFF',
-      fontSize: 12
+  vs: {
+    ...typography.overline,
   },
   button: {
-    backgroundColor: '#2563EB',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5
+    marginTop: spacing.xl,
   },
-  buttonDisabled: {
-    opacity: 0.6
-  },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16
-  },
-  logo: {
-    width: 200,
-    height: 100,
-    alignSelf: 'center',
-    marginBottom: 10
-  },
-  preview: {
-    width: '100%',
-    height: 180,
-    borderRadius: 10,
-    marginTop: 15,
-  },
-  previewLoading: {
-    width: '100%',
-    height: 180,
-    borderRadius: 10,
-    marginTop: 15,
-    filter: 'blur(5px)'
-  }
-})
+});

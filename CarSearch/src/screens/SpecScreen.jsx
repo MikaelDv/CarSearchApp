@@ -1,19 +1,17 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
-
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRoute } from "@react-navigation/native";
+
+import Screen from "../components/Screen";
+import BrandHeader from "../components/BrandHeader";
+import CarTitle from "../components/CarTitle";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import TextField from "../components/TextField";
 import { buscarCarro } from "../service/CarService";
+import { notify } from "../utils/notify";
+import { colors, radius, spacing, typography } from "../theme";
 
 export default function SpecScreen({ navigation }) {
   const route = useRoute();
@@ -33,7 +31,7 @@ export default function SpecScreen({ navigation }) {
 
   const removeItem = (indexToRemove) => {
     setEspecificacoesList((prev) =>
-      prev.filter((_, index) => index !== indexToRemove)
+      prev.filter((_, index) => index !== indexToRemove),
     );
   };
 
@@ -50,216 +48,116 @@ export default function SpecScreen({ navigation }) {
     try {
       const resultado = await buscarCarro(carro);
       navigation.navigate("Result", { resultado });
-    } catch (e) {
-      console.log("erro", e);
+    } catch (error) {
+      console.log("erro", error);
+      notify("Erro ao buscar veículo", error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        
-        <Image
-          source={require("../../assets/fordLogo.png")}
-          style={styles.logo}
-        />
+    <Screen>
+      <BrandHeader />
+      <View style={styles.header}>
+        <CarTitle marca={marca} modelo={modelo} versao={versao} />
+      </View>
 
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {marca.toUpperCase()}
-          </Text>
-          <Text style={styles.subtitle}>
-            {modelo.toUpperCase()} {versao.toUpperCase()}
-          </Text>
+      <Card title="Adicionar especificações">
+        <View style={styles.row}>
+          <TextField
+            style={styles.input}
+            placeholder="Ex: motor, consumo, potência..."
+            value={especificacao}
+            onChangeText={setEspecificacao}
+            onSubmitEditing={addEspcList}
+            returnKeyType="done"
+          />
+          <Button icon="add" variant="success" onPress={addEspcList} />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>
-            Adicionar especificações
-          </Text>
-
-          <View style={styles.row}>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: motor, consumo, potência..."
-              placeholderTextColor="#94A3B8"
-              value={especificacao}
-              onChangeText={setEspecificacao}
-            />
-
-            <TouchableOpacity style={styles.buttonAdd} onPress={addEspcList}>
-              <Text style={styles.buttonAddText}>+</Text>
+        <View style={styles.chipList}>
+          {especificacoesList.map((item, index) => (
+            <TouchableOpacity
+              key={`${item}-${index}`}
+              onPress={() => removeItem(index)}
+              style={styles.chip}
+            >
+              <Text style={styles.chipText}>{item}</Text>
+              <Ionicons name="close" size={14} color={colors.textMuted} />
             </TouchableOpacity>
-          </View>
-
-          <View style={styles.chipList}>
-            {especificacoesList.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => removeItem(index)}
-                style={styles.chip}
-              >
-                <Text style={styles.chipText}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {especificacoesList.length === 0 && (
-            <Text style={styles.emptyText}>
-              Nenhuma especificação adicionada
-            </Text>
-          )}
+          ))}
         </View>
 
-        <View style={styles.flowControl}>
-          <TouchableOpacity
-            style={[styles.buttonPrimary, { backgroundColor: "#334155" }]}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.buttonText}>Voltar</Text>
-          </TouchableOpacity>
+        <Text style={styles.hint}>
+          {especificacoesList.length === 0
+            ? "Nenhuma especificação adicionada — a busca trará as principais."
+            : "Toque em uma especificação para removê-la."}
+        </Text>
+      </Card>
 
-          <TouchableOpacity
-            onPress={handleBuscar}
-            style={styles.buttonPrimary}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.buttonText}>Buscar</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <View style={styles.flowControl}>
+        <Button
+          title="Voltar"
+          variant="secondary"
+          onPress={() => navigation.goBack()}
+          style={styles.flex}
+        />
+        <Button
+          title="Buscar"
+          icon="search"
+          onPress={handleBuscar}
+          loading={loading}
+          style={styles.flex}
+        />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-    padding: 20,
-    paddingTop: 60,
-  },
-
-  logo: {
-    width: 200,
-    height: 100,
-    alignSelf: "center",
-    marginBottom: 15,
-    resizeMode: "contain",
-  },
-
   header: {
-    alignItems: "center",
-    marginBottom: 25,
+    marginTop: -spacing.md,
+    marginBottom: spacing.xl,
   },
-
-  title: {
-    color: "#3B82F6",
-    fontSize: 16,
-    fontWeight: "bold",
-    letterSpacing: 2,
-  },
-
-  subtitle: {
-    color: "#FFF",
-    fontSize: 22,
-    fontWeight: "bold",
-    marginTop: 5,
-  },
-
-  card: {
-    backgroundColor: "#1E293B",
-    borderRadius: 16,
-    padding: 18,
-  },
-
-  sectionTitle: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-
   row: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.sm,
   },
-
   input: {
     flex: 1,
-    backgroundColor: "#0F172A",
-    color: "#FFF",
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#334155",
+    backgroundColor: colors.background,
   },
-
-  buttonAdd: {
-    backgroundColor: "#22C55E",
-    padding: 14,
-    borderRadius: 10,
-    marginLeft: 10,
-  },
-
-  buttonAddText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
   chipList: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginTop: 15,
+    gap: spacing.sm,
+    marginTop: spacing.lg,
   },
-
   chip: {
-    backgroundColor: "#334155",
-    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.surfaceAlt,
+    paddingVertical: spacing.sm,
     paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: radius.pill,
   },
-
   chipText: {
-    color: "#FFF",
-    fontSize: 14,
+    ...typography.body,
   },
-
-  emptyText: {
-    color: "#94A3B8",
-    marginTop: 10,
+  hint: {
+    ...typography.caption,
     textAlign: "center",
+    marginTop: spacing.md,
   },
-
   flowControl: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
+    gap: spacing.md,
+    marginTop: spacing.xl,
   },
-
-  buttonPrimary: {
-    backgroundColor: "#2563EB",
-    padding: 16,
-    borderRadius: 10,
-    alignItems: "center",
-    width: "48%",
-  },
-
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 16,
+  flex: {
+    flex: 1,
   },
 });

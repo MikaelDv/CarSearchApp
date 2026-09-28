@@ -1,218 +1,138 @@
 import React from "react";
-import {
-  Button,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-
+import { StyleSheet, Text, View } from "react-native";
 import { useRoute } from "@react-navigation/native";
 
-export default function CarComparatorResultScreen({navigation}) {
-  const route = useRoute();
+import Screen from "../components/Screen";
+import BrandHeader from "../components/BrandHeader";
+import CarTitle from "../components/CarTitle";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import { colors, radius, spacing, typography } from "../theme";
 
+export default function CarComparatorResultScreen({ navigation }) {
+  const route = useRoute();
   const { carros, resultado } = route.params || {};
 
-  const [lista, setLista] = React.useState([]);
-
-  React.useEffect(() => {
-    if (resultado && typeof resultado === "object") {
-      const listaFormatada = Object.values(resultado).map(
-        (value) => `${value}`,
-      );
-
-      setLista(listaFormatada);
-    } else {
-      setLista([]);
-    }
-  }, [resultado]);
+  const lista =
+    resultado && typeof resultado === "object"
+      ? Object.values(resultado).map((value) => `${value}`)
+      : [];
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Image
-          source={require("../../assets/fordLogo.png")}
-          style={styles.logo}
-        />
+    <Screen>
+      <BrandHeader />
 
-        <View style={styles.header}>
-          <View style={styles.carView}>
-            <Text style={styles.brand}>{carros?.marca?.toUpperCase()}</Text>
-            <Text style={styles.model}>
-              {carros?.modelo?.toUpperCase()} {carros?.versao?.toUpperCase()}
-            </Text>
-          </View>
-
-          <Text style={styles.vs}>X</Text>
-
-          <View style={styles.carView}>
-            <Text style={styles.brand}>{carros?.marca2?.toUpperCase()}</Text>
-            <Text style={styles.model}>
-              {carros?.modelo2?.toUpperCase()} {carros?.versao2?.toUpperCase()}
-            </Text>
-          </View>
+      <View style={styles.header}>
+        <View style={styles.carView}>
+          <CarTitle
+            compact
+            marca={carros?.marca}
+            modelo={carros?.modelo}
+            versao={carros?.versao}
+          />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Resultados da comparação</Text>
+        <Text style={styles.vs}>VS</Text>
 
-          {lista.map((item, index) => (
-            <View style={styles.obsCard} key={index}>
-              <View style={styles.obsBadge}>
-                <Text style={styles.obsBadgeText}>{index + 1}</Text>
-              </View>
+        <View style={styles.carView}>
+          <CarTitle
+            compact
+            marca={carros?.marca2}
+            modelo={carros?.modelo2}
+            versao={carros?.versao2}
+          />
+        </View>
+      </View>
 
-              <View style={styles.obsItem}>
-                <Text style={styles.obsItemText}>{item}</Text>
-              </View>
+      <Card title="Resultados da comparação">
+        {lista.length === 0 && (
+          <Text style={styles.empty}>Nenhum resultado retornado.</Text>
+        )}
+        {lista.map((item, index) => (
+          <View style={styles.obsCard} key={index}>
+            <View style={styles.obsBadge}>
+              <Text style={styles.obsBadgeText}>{index + 1}</Text>
             </View>
-          ))}
-        </View>
+            <View style={styles.obsItem}>
+              <Text style={styles.obsItemText}>{item}</Text>
+            </View>
+          </View>
+        ))}
+      </Card>
 
-        <TouchableOpacity
-          style={styles.buttonPrimary}
+      <View style={styles.flowControl}>
+        <Button
+          title="Voltar"
+          variant="secondary"
+          onPress={() => navigation.goBack()}
+          style={styles.flex}
+        />
+        <Button
+          title="Nova Comparação"
           onPress={() => navigation.popToTop()}
-        >
-          <Text style={styles.buttonText}>Nova Busca</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          style={styles.flex}
+        />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-  },
-
-  scroll: {
-    padding: 24,
-    alignItems: "center",
-  },
-
-  logo: {
-    width: 200,
-    height: 100,
-    marginBottom: 20,
-  },
-
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    width: "100%",
-    marginBottom: 25,
+    marginBottom: spacing.xl,
   },
-
   carView: {
     flex: 1,
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: "#1E293B",
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
   },
-
-  brand: {
-    color: "#3B82F6",
-    fontSize: 14,
-    fontWeight: "bold",
-    letterSpacing: 1,
+  vs: {
+    ...typography.overline,
+    marginHorizontal: spacing.sm,
   },
-
-  model: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 5,
+  empty: {
+    ...typography.caption,
     textAlign: "center",
   },
-
-  vs: {
-    color: "#FFF",
-    fontSize: 22,
-    fontWeight: "bold",
-    marginHorizontal: 10,
-  },
-
-  card: {
-    backgroundColor: "#1E293B",
-    borderRadius: 16,
-    padding: 18,
-    width: "100%",
-    marginTop: 20,
-    alignItems: "center",
-  },
-
-  cardTitle: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-
-  cardText: {
-    color: "#94A3B8",
-    fontSize: 14,
-  },
-
   obsCard: {
     flexDirection: "row",
     alignItems: "center",
-    width: "100%",
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
-
   obsBadge: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#3B82F6",
+    backgroundColor: colors.accent,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
-    flexShrink: 0,
+    marginRight: spacing.sm,
   },
-
+  obsBadgeText: {
+    ...typography.button,
+    fontSize: 14,
+  },
   obsItem: {
     flex: 1,
-    padding: 12,
-    borderWidth: 2,
-    borderColor: "#3B82F6",
-    borderRadius: 10,
-    backgroundColor: "#0F172A",
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radius.md,
+    backgroundColor: colors.background,
   },
-
   obsItemText: {
-    color: "#FFF",
-    fontSize: 14,
+    ...typography.body,
     lineHeight: 20,
   },
-
-  obsBadgeText: {
-    color: "#fff",
-    fontWeight: "bold",
+  flowControl: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginTop: spacing.xl,
   },
-  buttonPrimary: {
-    backgroundColor: "#2563EB",
-    padding: 16,
-    borderRadius: 10,
-    alignItems: "center",
-    width: "100%",
-    marginTop: 20,
-  },
-
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 16,
+  flex: {
+    flex: 1,
   },
 });

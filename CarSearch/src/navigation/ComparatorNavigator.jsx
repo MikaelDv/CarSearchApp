@@ -1,4 +1,3 @@
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import CarComparatorScreen from '../screens/CarComparatorScreen';
@@ -8,7 +7,7 @@ const Stack = createNativeStackNavigator();
 
 export default function ComparatorNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <Stack.Screen name="ComparatorHomeScreen" component={CarComparatorScreen} />
       <Stack.Screen name="ComparatorResult" component={CarComparatorResultScreen} />
     </Stack.Navigator>

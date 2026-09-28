@@ -1,77 +1,79 @@
-const BASE_URL = "http://localhost:8080";
+import { Platform } from "react-native";
 
-export async function buscarCarro(dados) {
+import { BASE_URL } from "../config/api";
+
+const TIMEOUT_MS = 60000;
+
+async function request(path, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
   try {
-    const response = await fetch(`${BASE_URL}/carros`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dados),
+    const response = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      signal: controller.signal,
     });
 
     if (!response.ok) {
-      throw new Error("Erro na requisição");
+      throw new Error(`Erro na requisição (${response.status})`);
     }
 
-    return await response.json();
+    return response;
   } catch (error) {
-    console.error("Erro ao buscar carro:", error);
+    if (error.name === "AbortError") {
+      throw new Error("O servidor demorou demais para responder.");
+    }
+    if (error instanceof TypeError) {
+      throw new Error(
+        `Não foi possível conectar ao servidor (${BASE_URL}). Verifique sua conexão.`,
+      );
+    }
     throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
-export async function uploadImagem(file) {
+function postJson(path, dados) {
+  return request(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dados),
+  });
+}
+
+export async function buscarCarro(dados) {
+  const response = await postJson("/carros", dados);
+  return response.json();
+}
+
+export async function uploadImagem(asset) {
   const formData = new FormData();
 
-  formData.append('file', file.file); 
+  if (Platform.OS === "web") {
+    formData.append("file", asset.file);
+  } else {
+    // No Android/iOS o FormData do React Native espera { uri, name, type }.
+    formData.append("file", {
+      uri: asset.uri,
+      name: asset.fileName || "carro.jpg",
+      type: asset.mimeType || "image/jpeg",
+    });
+  }
 
-  const response = await fetch('http://localhost:8080/carros/upload', {
-    method: 'POST',
-    body: formData
+  const response = await request("/carros/upload", {
+    method: "POST",
+    body: formData,
   });
-
   return response.json();
 }
 
 export async function buscarImagem(dados) {
-  try {
-    const response = await fetch(`${BASE_URL}/carros/pesquisarImagem`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dados),
-    });
-
-    if (!response.ok) {
-      throw new Error("Erro na requisição");
-    }
-
-    return await response.text();
-  } catch (error) {
-    console.error("Erro ao buscar carro:", error);
-    throw error;
-  }
+  const response = await postJson("/carros/pesquisarImagem", dados);
+  return response.text();
 }
 
 export async function compararVeiculos(dados) {
-  try {
-    const response = await fetch(`${BASE_URL}/carros/comparar`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dados),
-    });
-
-    if (!response.ok) {
-      throw new Error("Erro na requisição");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Erro ao buscar carro:", error);
-    throw error;
-  }
+  const response = await postJson("/carros/comparar", dados);
+  return response.json();
 }

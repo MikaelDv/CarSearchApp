@@ -1,220 +1,151 @@
-import React, { useState } from 'react'
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-  ActivityIndicator,
-  ScrollView
-} from 'react-native'
+import React, { useState } from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 
-import { uploadImagem } from '../service/CarService'
-import * as ImagePicker from 'expo-image-picker';
+import Screen from "../components/Screen";
+import BrandHeader from "../components/BrandHeader";
+import Button from "../components/Button";
+import TextField from "../components/TextField";
+import { uploadImagem } from "../service/CarService";
+import { notify } from "../utils/notify";
+import { colors, radius, spacing, typography } from "../theme";
 
 export default function HomeScreen({ navigation }) {
-  const [marca, setMarca] = useState('')
-  const [modelo, setModelo] = useState('')
-  const [versao, setVersao] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [imagem, setImagem] = useState(null)
+  const [marca, setMarca] = useState("");
+  const [modelo, setModelo] = useState("");
+  const [versao, setVersao] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [imagem, setImagem] = useState(null);
 
   function handleAvancar() {
-    if (!marca || !modelo || !versao) {
-      alert("Preencha todos os campos")
-      return
+    if (!marca.trim() || !modelo.trim() || !versao.trim()) {
+      notify("Campos obrigatórios", "Preencha marca, modelo e versão.");
+      return;
     }
 
-    navigation.navigate('Step2', {
-      marca,
-      modelo,
-      versao
-    })
+    navigation.navigate("Step2", {
+      marca: marca.trim(),
+      modelo: modelo.trim(),
+      versao: versao.trim(),
+    });
 
-    setMarca('')
-    setModelo('')
-    setVersao('')
-    setImagem(null)
+    setMarca("");
+    setModelo("");
+    setVersao("");
+    setImagem(null);
   }
 
   async function selecionarImagem() {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 1,
+      mediaTypes: ["images"],
+      quality: 0.7,
       allowsEditing: true,
-    })
+    });
 
     if (!result.canceled) {
-      const asset = result.assets[0]
-
-      console.log("ASSET:", asset)
-
-      setImagem(asset.uri)
-      handleUploadImagem(asset)
+      const asset = result.assets[0];
+      setImagem(asset.uri);
+      handleUploadImagem(asset);
     }
   }
 
-  async function handleUploadImagem(file) {
+  async function handleUploadImagem(asset) {
     try {
-      setLoading(true)
-
-      const response = await uploadImagem(file)
-      setMarca(response.marca)
-      setModelo(response.modelo)
-      setVersao(response.versao)
-
+      setLoading(true);
+      const response = await uploadImagem(asset);
+      setMarca(response.marca ?? "");
+      setModelo(response.modelo ?? "");
+      setVersao(response.versao ?? "");
     } catch (error) {
-      console.log(error)
-      setImagem(null)
-      alert("Erro ao analisar imagem")
+      console.log(error);
+      setImagem(null);
+      notify("Erro ao analisar imagem", error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView>
-      <Image
-        source={require("../../assets/fordLogo.png")}
-        style={styles.logo}
+    <Screen>
+      <BrandHeader
+        title="CarSearch"
+        subtitle="Encontre veículos da concorrência com precisão"
       />
 
-      <Text style={styles.title}>CarSearch</Text>
-      <Text style={styles.subtitle}>
-        Encontre veículos da concorrência com precisão
-      </Text>
-
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
+      <Button
+        title="Identificar por imagem"
+        icon="camera-outline"
         onPress={selecionarImagem}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#FFF" />
-        ) : (
-          <Text style={styles.buttonText}>Enviar imagem</Text>
-        )}
-      </TouchableOpacity>
+        loading={loading}
+      />
 
       {imagem && (
-        loading ? (
-          <Image
-          source={{ uri: imagem }}
-          style={styles.previewLoading}
-        />
-        ) : (
         <Image
           source={{ uri: imagem }}
           style={styles.preview}
+          blurRadius={loading ? 8 : 0}
         />
-      ) )}
+      )}
+
+      <View style={styles.divider}>
+        <View style={styles.line} />
+        <Text style={styles.dividerText}>ou digite</Text>
+        <View style={styles.line} />
+      </View>
 
       <View style={styles.form}>
-        <TextInput
-          style={styles.input}
+        <TextField
           placeholder="Marca (ex: Ford)"
-          placeholderTextColor="#94A3B8"
           value={marca}
           onChangeText={setMarca}
+          maxLength={25}
         />
-
-        <TextInput
-          style={styles.input}
+        <TextField
           placeholder="Modelo (ex: Ranger)"
-          placeholderTextColor="#94A3B8"
           value={modelo}
           onChangeText={setModelo}
+          maxLength={35}
         />
-
-        <TextInput
-          style={styles.input}
+        <TextField
           placeholder="Versão (ex: Raptor)"
-          placeholderTextColor="#94A3B8"
           value={versao}
           onChangeText={setVersao}
+          maxLength={50}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleAvancar}>
-          <Text style={styles.buttonText}>Avançar</Text>
-        </TouchableOpacity>
+        <Button
+          title="Avançar"
+          icon="arrow-forward"
+          onPress={handleAvancar}
+          disabled={loading}
+        />
       </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  )
+    </Screen>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  preview: {
+    width: "100%",
+    height: 180,
+    borderRadius: radius.md,
+    marginTop: spacing.lg,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginVertical: spacing.xl,
+  },
+  line: {
     flex: 1,
-    backgroundColor: '#0F172A',
-    justifyContent: 'center',
-    padding: 24
+    height: 1,
+    backgroundColor: colors.border,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center'
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginBottom: 20
+  dividerText: {
+    ...typography.caption,
   },
   form: {
-    gap: 12,
-    marginTop: 20
+    gap: spacing.md,
   },
-  input: {
-    backgroundColor: '#1E293B',
-    color: '#FFF',
-    padding: 14,
-    borderRadius: 10
-  },
-  button: {
-    backgroundColor: '#2563EB',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5
-  },
-  buttonDisabled: {
-    opacity: 0.6
-  },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16
-  },
-  logo: {
-    width: 200,
-    height: 100,
-    alignSelf: 'center',
-    marginBottom: 10
-  },
-  preview: {
-    width: '100%',
-    height: 180,
-    borderRadius: 10,
-    marginTop: 15,
-  },
-  previewLoading: {
-    width: '100%',
-    height: 180,
-    borderRadius: 10,
-    marginTop: 15,
-    filter: 'blur(5px)'
-  }
-})
+});
